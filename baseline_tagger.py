@@ -21,14 +21,14 @@ for i in range(len(ans)):
                 tokens.add(post.token)
                 pos_tags.add(post.pos)
         features = list(tokens) + list(pos_tags)
-        try:
+        if index > 0:
             if ans[i][index - 1].speaker == j.speaker:
                 features.append('False')
                 features.append('False')
             else:
                 features.append('True')
                 features.append('False')
-        except:
+        else:
             features.append('False')
             features.append('True')
         X_train.append([features])
@@ -63,14 +63,14 @@ for i in range(len(test_data)):
                 tokens.add(post.token)
                 pos_tags.add(post.pos)
         features = list(tokens) + list(pos_tags)
-        try:
+        if index > 0:
             if test_data[i][index - 1].speaker == j.speaker:
                 features.append('False')
                 features.append('False')
             else:
                 features.append('True')
                 features.append('False')
-        except:
+        else:
             features.append('False')
             features.append('True')
         X_test.append([features])
@@ -83,11 +83,14 @@ correct = 0
 write_string = ""
 for i in range(len(X_test)):
     tot += 1
-    write_string += str(tagger.tag(X_test[i])[0]) + "\n"
+    if X_test[i][0][-1] == "True":      # First utterance of dialogue
+        write_string += "\n" + str(tagger.tag(X_test[i])[0]) + "\n"
+    else:                               # Not first utterance of dialogue
+        write_string += str(tagger.tag(X_test[i])[0]) + "\n"
     if tagger.tag(X_test[i])[0] == y_test[i][0]:
         correct += 1
 
 print(correct / tot * 100)
 f = open(out_file, "w")
-f.write(write_string)
+f.write(write_string[1:])
 f.close()
