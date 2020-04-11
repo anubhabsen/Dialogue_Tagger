@@ -18,23 +18,31 @@ for i in range(len(ans)):
             features = []
         else:
             for post in j.pos:
-                tokens.add(post.token.lower())
+                tokens.add(post.token)
                 pos_tags.add(post.pos)
         features = list(tokens) + list(pos_tags)
+        if 'Wh' in j.text:
+            features.append('F')
+        else:
+            features.append('T')
+        # if '?' in j.text:
+        #     features.append('T')
+        # else:
+        #     features.append('F')
         if index > 0:
             if ans[i][index - 1].speaker == j.speaker:
-                features.append('False')
-                features.append('False')
+                features.append('F')
+                features.append('F')
             else:
-                features.append('True')
-                features.append('False')
+                features.append('T')
+                features.append('F')
         else:
-            features.append('True')
-            features.append('True')
+            features.append('T')
+            features.append('T')
         X_train.append([features])
         y_train.append([j.act_tag])
 
-trainer = pycrfsuite.Trainer(verbose=True)
+trainer = pycrfsuite.Trainer(verbose=False)
 
 for i in range(len(X_train)):
     trainer.append(X_train[i], y_train[i])
@@ -42,7 +50,7 @@ for i in range(len(X_train)):
 trainer.set_params({
     'c1': 1.0,   # coefficient for L1 penalty
     'c2': 1e-3,  # coefficient for L2 penalty
-    'max_iterations': 70,  # stop earlier
+    'max_iterations': 100,  # stop earlier
 
     # include transitions that are possible, but not observed
     'feature.possible_transitions': True
@@ -60,19 +68,27 @@ for i in range(len(test_data)):
             features = []
         else:
             for post in j.pos:
-                tokens.add(post.token.lower())
+                tokens.add(post.token)
                 pos_tags.add(post.pos)
         features = list(tokens) + list(pos_tags)
+        if 'Wh' in j.text:
+            features.append('F')
+        else:
+            features.append('T')
+        # if '?' in j.text:
+        #     features.append('T')
+        # else:
+        #     features.append('F')
         if index > 0:
             if test_data[i][index - 1].speaker == j.speaker:
-                features.append('False')
-                features.append('False')
+                features.append('F')
+                features.append('F')
             else:
-                features.append('True')
-                features.append('False')
+                features.append('T')
+                features.append('F')
         else:
-            features.append('True')
-            features.append('True')
+            features.append('T')
+            features.append('T')
         X_test.append([features])
         y_test.append([j.act_tag])
 
@@ -83,7 +99,7 @@ correct = 0
 write_string = ""
 for i in range(len(X_test)):
     tot += 1
-    if X_test[i][0][-1] == "True":      # First utterance of dialogue
+    if X_test[i][0][-1] == "T":      # First utterance of dialogue
         write_string += "\n" + str(tagger.tag(X_test[i])[0]) + "\n"
     else:                               # Not first utterance of dialogue
         write_string += str(tagger.tag(X_test[i])[0]) + "\n"
