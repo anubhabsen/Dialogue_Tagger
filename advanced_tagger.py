@@ -1,3 +1,5 @@
+# Saurabh's POS trick, act_tag and predicted act tag as feature (test this)
+
 import pycrfsuite
 from hw2_corpus_tool import *
 import sys
@@ -15,12 +17,12 @@ for i in range(len(ans)):
         tokens = set([])
         pos_tags = set([])
         if not j.pos:
-            features = []
+            features = ['no word']
         else:
             for post in j.pos:
-                tokens.add(post.token)
-                pos_tags.add(post.pos)
-        features = list(tokens) + list(pos_tags)
+                tokens.add('TOKEN_'+post.token)
+                pos_tags.add('POS_'+post.pos)
+            features = list(tokens) + list(pos_tags)
         if 'Wh' in j.text:
             features.append('F')
         else:
@@ -50,7 +52,7 @@ for i in range(len(X_train)):
 trainer.set_params({
     'c1': 1.0,   # coefficient for L1 penalty
     'c2': 1e-3,  # coefficient for L2 penalty
-    'max_iterations': 100,  # stop earlier
+    'max_iterations': 50,  # stop earlier
 
     # include transitions that are possible, but not observed
     'feature.possible_transitions': True
@@ -65,12 +67,12 @@ for i in range(len(test_data)):
         tokens = set([])
         pos_tags = set([])
         if not j.pos:
-            features = []
+            features = ['no word']
         else:
             for post in j.pos:
-                tokens.add(post.token)
-                pos_tags.add(post.pos)
-        features = list(tokens) + list(pos_tags)
+                tokens.add('TOKEN_'+post.token)
+                pos_tags.add('POS_'+post.pos)
+            features = list(tokens) + list(pos_tags)
         if 'Wh' in j.text:
             features.append('F')
         else:
