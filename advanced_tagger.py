@@ -14,23 +14,7 @@ X_test = []
 y_test = []
 for i in range(len(ans)):
     for index, j in enumerate(ans[i]):
-        tokens = set([])
-        pos_tags = set([])
-        if not j.pos:
-            features = ['no word']
-        else:
-            for post in j.pos:
-                tokens.add('TOKEN_'+post.token)
-                pos_tags.add('POS_'+post.pos)
-            features = list(tokens) + list(pos_tags)
-        if 'Wh' in j.text:
-            features.append('F')
-        else:
-            features.append('T')
-        # if '?' in j.text:
-        #     features.append('T')
-        # else:
-        #     features.append('F')
+        features = []
         if index > 0:
             if ans[i][index - 1].speaker == j.speaker:
                 features.append('F')
@@ -41,6 +25,39 @@ for i in range(len(ans)):
         else:
             features.append('T')
             features.append('T')
+        tokens = set([])
+        pos_tags = set([])
+        if not j.pos:
+            features.append('no word')
+        else:
+            for index, post in enumerate(j.pos):
+                tokens.add('TOKEN_'+post.token)
+                pos_tags.add('POS_'+post.pos)
+                if len(post.token) > 3:
+                    tokens.add(post.token[-3:])
+                    tokens.add(post.token[-2:])
+                elif len(post.token) == 3:
+                    tokens.add(post.token[-2:])
+                if len(post.pos) > 2:
+                    pos_tags.add(post.pos[:2])
+                if index > 0 and index < len(j.pos) - 1:
+                    tokens.add(j.pos[index - 1].token + '|' + post.token + '|' + j.pos[index + 1].token)
+                    pos_tags.add(j.pos[index - 1].pos + '|' + post.pos + '|' + j.pos[index + 1].pos)
+                elif index == 0 and len(j.pos) > 1:
+                    tokens.add(post.token + '|' + j.pos[index + 1].token)
+                    pos_tags.add(post.pos + '|' + j.pos[index + 1].pos)
+                elif index == len(j.pos) - 1 and len(j.pos) > 1:
+                    tokens.add(j.pos[index - 1].token + '|' + post.token)
+                    pos_tags.add(j.pos[index - 1].pos + '|' + post.pos)
+            features = features + list(tokens) + list(pos_tags)
+        if 'Wh' in j.text:
+            features.append('F')
+        else:
+            features.append('T')
+        # if '?' in j.text:
+        #     features.append('T')
+        # else:
+        #     features.append('F')
         X_train.append([features])
         y_train.append([j.act_tag])
 
@@ -64,23 +81,7 @@ trainer.train('model.crfsuite')
 test_data = get_data(test_dir)
 for i in range(len(test_data)):
     for index, j in enumerate(test_data[i]):
-        tokens = set([])
-        pos_tags = set([])
-        if not j.pos:
-            features = ['no word']
-        else:
-            for post in j.pos:
-                tokens.add('TOKEN_'+post.token)
-                pos_tags.add('POS_'+post.pos)
-            features = list(tokens) + list(pos_tags)
-        if 'Wh' in j.text:
-            features.append('F')
-        else:
-            features.append('T')
-        # if '?' in j.text:
-        #     features.append('T')
-        # else:
-        #     features.append('F')
+        features = []
         if index > 0:
             if test_data[i][index - 1].speaker == j.speaker:
                 features.append('F')
@@ -91,24 +92,57 @@ for i in range(len(test_data)):
         else:
             features.append('T')
             features.append('T')
+        tokens = set([])
+        pos_tags = set([])
+        if not j.pos:
+            features.append('no word')
+        else:
+            for index, post in enumerate(j.pos):
+                tokens.add('TOKEN_'+post.token)
+                pos_tags.add('POS_'+post.pos)
+                if len(post.token) > 3:
+                    tokens.add(post.token[-3:])
+                    tokens.add(post.token[-2:])
+                elif len(post.token) == 3:
+                    tokens.add(post.token[-2:])
+                if len(post.pos) > 2:
+                    pos_tags.add(post.pos[:2])
+                if index > 0 and index < len(j.pos) - 1:
+                    tokens.add(j.pos[index - 1].token + '|' + post.token + '|' + j.pos[index + 1].token)
+                    pos_tags.add(j.pos[index - 1].pos + '|' + post.pos + '|' + j.pos[index + 1].pos)
+                elif index == 0 and len(j.pos) > 1:
+                    tokens.add(post.token + '|' + j.pos[index + 1].token)
+                    pos_tags.add(post.pos + '|' + j.pos[index + 1].pos)
+                elif index == len(j.pos) - 1 and len(j.pos) > 1:
+                    tokens.add(j.pos[index - 1].token + '|' + post.token)
+                    pos_tags.add(j.pos[index - 1].pos + '|' + post.pos)
+            features = features + list(tokens) + list(pos_tags)
+        if 'Wh' in j.text:
+            features.append('F')
+        else:
+            features.append('T')
+        # if '?' in j.text:
+        #     features.append('T')
+        # else:
+        #     features.append('F')
         X_test.append([features])
-        y_test.append([j.act_tag])
+        # y_test.append([j.act_tag])
 
 tagger = pycrfsuite.Tagger()
 tagger.open('model.crfsuite')
-tot = 0
-correct = 0
+# tot = 0
+# correct = 0
 write_string = ""
 for i in range(len(X_test)):
-    tot += 1
-    if X_test[i][0][-1] == "T":      # First utterance of dialogue
+    # tot += 1
+    if X_test[i][0][1] == "T":      # First utterance of dialogue
         write_string += "\n" + str(tagger.tag(X_test[i])[0]) + "\n"
     else:                               # Not first utterance of dialogue
         write_string += str(tagger.tag(X_test[i])[0]) + "\n"
-    if tagger.tag(X_test[i])[0] == y_test[i][0]:
-        correct += 1
+    # if tagger.tag(X_test[i])[0] == y_test[i][0]:
+    #     correct += 1
 
-print(correct / tot * 100)
+# print(correct / tot * 100)
 f = open(out_file, "w")
 f.write(write_string[1:])
 f.close()
